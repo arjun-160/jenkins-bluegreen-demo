@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-__COLOR__
+  labels:
+    app: bluegreen
+    color: __COLOR__
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bluegreen
+      color: __COLOR__
+  template:
+    metadata:
+      labels:
+        app: bluegreen
+        color: __COLOR__
+    spec:
+      containers:
+        - name: web
+          image: bluegreen-app:__TAG__
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_COLOR
+              value: "__COLOR__"
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi

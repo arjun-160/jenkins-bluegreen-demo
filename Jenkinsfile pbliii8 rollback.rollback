@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+
+    environment {
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+    }
+
+    stages {
+        stage('Checkout from Git') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Rollback to Previous Color') {
+            steps {
+                sh '''
+                    ACTIVE=$(kubectl get svc bluegreen-service -o jsonpath='{.spec.selector.color}')
+                    if [ "$ACTIVE" = "blue" ]; then OTHER=green; else OTHER=blue; fi
+                    echo "Live is $ACTIVE, rolling back to $OTHER"
+
+                    if ! kubectl get deployment app-$OTHER > /dev/null 2>&1; then
+                        echo "No previous version (app-$OTHER) exists, nothing to roll back to"
+                        exit 1
+                    fi
+
+                    kubectl rollout status deployment/app-$OTHER --timeout=60s
+                    sed "s/__COLOR__/$OTHER/g" k8s/live-service.yaml | kubectl apply -f -
+                    sed "s/__COLOR__/$ACTIVE/g" k8s/preview-service.yaml | kubectl apply -f -
+
+                    IP=$(curl -s http://checkip.amazonaws.com)
+                    echo "=========================================="
+                    echo " ROLLED BACK. Live color is now: $OTHER"
+                    echo " Live site : http://$IP:30090"
+                    echo "=========================================="
+                '''
+            }
+        }
+    }
+}
