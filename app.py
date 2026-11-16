@@ -32,7 +32,7 @@ PAGE = Template("""<!DOCTYPE html>
 <div class="wrap">
   <span class="badge">$color_upper ENVIRONMENT</span>
   <h1>Blue-Green Deployment</h1>
-  <p>This version is running in the $color environment on Kubernetes.</p>
+  <p>Version 2 is running in the $color environment on Kubernetes.</p>
   <div class="grid">
     <div class="card"><small>Version (build)</small><div>$version</div></div>
     <div class="card"><small>Pod name</small><div>$pod</div></div>
